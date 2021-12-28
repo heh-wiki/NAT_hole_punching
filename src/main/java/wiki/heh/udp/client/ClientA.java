@@ -17,7 +17,7 @@ import java.util.concurrent.atomic.AtomicLong;
  * @author heh
  * @date 2021/12/28
  */
-public class Client {
+public class ClientA {
     private final AtomicLong requestId = new AtomicLong(1);
 
     private DatagramSocket client = null;
@@ -79,7 +79,7 @@ public class Client {
                 }
             }
         } else if (message.getCommand().equals(Message.CMD_P2P_CONNECT)) {
-            message.setData("hello-P2P");
+            message.setData("[ClientA] hello-P2P->"+System.currentTimeMillis());
             byte[] data = JsonUtil.toJson(message).getBytes();
             DatagramPacket dataPack = new DatagramPacket(data, data.length, packet.getAddress(), packet.getPort());
             Thread.sleep(5000);
@@ -126,9 +126,9 @@ public class Client {
      * @throws Exception
      */
     public static void main(String[] args) throws Exception {
-        Client client = new Client();
-        client.start();
-        client.login();
-        client.list();
+        ClientA clientA = new ClientA();
+        clientA.start();
+        clientA.login();
+        clientA.list();
     }
 }
