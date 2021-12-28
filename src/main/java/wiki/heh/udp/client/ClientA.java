@@ -9,6 +9,7 @@ import java.net.DatagramSocket;
 import java.net.InetAddress;
 import java.nio.charset.StandardCharsets;
 import java.util.Map;
+import java.util.Scanner;
 import java.util.concurrent.atomic.AtomicLong;
 
 /**
@@ -79,7 +80,9 @@ public class ClientA {
                 }
             }
         } else if (message.getCommand().equals(Message.CMD_P2P_CONNECT)) {
-            message.setData("[ClientA] hello-P2P->"+System.currentTimeMillis());
+            System.out.print("请输入message:");
+            Scanner sc = new Scanner(System.in);
+            message.setData("【ClientA】 msg:"+sc.next());
             byte[] data = JsonUtil.toJson(message).getBytes();
             DatagramPacket dataPack = new DatagramPacket(data, data.length, packet.getAddress(), packet.getPort());
             Thread.sleep(5000);

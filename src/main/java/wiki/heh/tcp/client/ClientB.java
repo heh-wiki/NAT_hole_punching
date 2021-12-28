@@ -10,7 +10,7 @@ import java.net.*;
  * @author heh
  * @date 2021/12/28
  */
-public class ClientA {
+public class ClientB {
 
     private static InetAddress mediatorIP;
     private static int mediatorTcpDiscussionPort;
@@ -33,16 +33,15 @@ public class ClientA {
     private Thread readOnHole, listenOnHole, writeOnHole;
 
     /**
-     * 客户端A构造
-     *
-     * @param ip                服务器的ip地址
-     * @param tcpDiscussionPort 连接服务器的tcp端口
-     * @param tcpPunchPort      tcp 打洞的端口
-     * @throws IOException 异常情况
+     * Constructor of ClientB
+     * @param ip the ip addr of the mediator
+     * @param tcpDiscussionPort the tcp port to connect to the mediator for discussion
+     * @param tcpPunchPort the tcp port to connect to the mediator for punching holes
+     * @throws IOException if something goes wrong
      */
-    public ClientA(InetAddress ip, int tcpDiscussionPort, int tcpPunchPort) throws IOException {
+    public ClientB(InetAddress ip, int tcpDiscussionPort, int tcpPunchPort) throws IOException{
 
-        //创建一个socket连接到服务器
+        //create a socket to connect to the server
         try {
             socketDiscussion = new Socket(ip, tcpDiscussionPort);
             socketClientPunch = new Socket(ip, tcpPunchPort);
@@ -52,7 +51,7 @@ public class ClientA {
 
         this.runningHole = true;
 
-        //创建输入和输出流
+        //create input and output stream
         inDiscussion = new BufferedReader(new InputStreamReader(socketDiscussion.getInputStream()));
         outDiscussion = new BufferedOutputStream(socketDiscussion.getOutputStream());
 
@@ -65,19 +64,21 @@ public class ClientA {
         System.out.println("sending initial tcp punch message");
 
         //Send message, the server get all information about the message send (local port, distant port and ip)
-        byte[] sendData = "one".getBytes();
+        byte[] sendData = "two".getBytes();
         outPunch.write(sendData);
         outPunch.write('\n');
         outPunch.flush();
+
+
     }
 
-    private void readOnHole() throws IOException {
+    private void readOnHole() throws IOException{
         this.readOnHole = new Thread(new Runnable() {
             @Override
             public void run() {
                 //create a loop to read the TCP response from the server
-                while (!respRead) {
-                    try {
+                while (!respRead){
+                    try{
                         //Wait for message
                         message = inDiscussion.readLine();
 
@@ -90,21 +91,21 @@ public class ClientA {
                         System.out.println("****************************************\n");
 
                         System.out.println("****************************************");
-                        System.out.println("CLIENT B PUBLIC IP seen by server: " + tokens[3]);
-                        System.out.println("CLIENT B PUBLIC TCP PORT seen by server: " + tokens[4]);
-                        System.out.println("CLIENT B LOCAL  TCP PORT seen by server: " + tokens[5]);
+                        System.out.println("CLIENT A PUBLIC IP seen by server: " + tokens[3]);
+                        System.out.println("CLIENT A PUBLIC TCP PORT seen by server: " + tokens[4]);
+                        System.out.println("CLIENT A LOCAL  TCP PORT seen by server: " + tokens[5]);
                         System.out.println("****************************************");
 
                         respRead = true;
 
                         //ACK SERVER
-                        outDiscussion.write("ackOne".getBytes());
+                        outDiscussion.write("ackTwo".getBytes());
                         outDiscussion.write('\n');
                         outDiscussion.flush();
 
                         //Received all infos needed -> proceed hole punching
-                        proceedHolePunching(InetAddress.getByName(tokens[3].trim()), Integer.parseInt(tokens[1].trim()), Integer.valueOf(tokens[2]));
-                    } catch (IOException ioe) {
+                        proceedHolePunching(InetAddress.getByName(tokens[3].trim()), Integer.parseInt(tokens[5].trim()), Integer.valueOf(tokens[4]));
+                    }catch (IOException ioe){
                         ioe.printStackTrace();
                     }
                 }
@@ -114,17 +115,17 @@ public class ClientA {
         this.readOnHole.start();
     }
 
-    private void listenConnectionHole(int localPort) {
+    private void listenConnectionHole(int localPort){
         new Thread(new Runnable() {
             @Override
             public void run() {
-                try {
+                try{
                     System.out.println("Listen hole on port: " + localPort);
                     socketServerPunch = new ServerSocket(localPort);
                     socketClientPunch = socketServerPunch.accept();
                     inPunch = new BufferedReader(new InputStreamReader(socketClientPunch.getInputStream()));
                     outPunch = new BufferedOutputStream(socketClientPunch.getOutputStream());
-                } catch (Exception e) {
+                }catch (Exception e){
                     inPunch = null;
                     outPunch = null;
                 }
@@ -132,14 +133,13 @@ public class ClientA {
         }).start();
     }
 
-    private void listenDataOnHole(String addr, int port) {
+    private void listenDataOnHole(String addr, int port){
         this.listenOnHole = new Thread(new Runnable() {
             @Override
             public void run() {
-                while (runningHole) {
+                while(runningHole) {
                     try {
                         message = inPunch.readLine();
-
                         System.out.println("Received: " + message.trim() + ", From: IP " + addr + " Port " + port);
                     } catch (IOException ex) {
                         System.err.println("Error " + ex);
@@ -150,24 +150,32 @@ public class ClientA {
         this.listenOnHole.start();
     }
 
-    private void writeDataOnHole() {
+    private void redirectPorts(int from, int to){
+        try {
+            Process proc1 = Runtime.getRuntime().exec("iptables -t nat -A PREROUTING -i eth0 -p tcp --dport " + from + " -j REDIRECT --to-port " + to);
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
+
+    private void writeDataOnHole(){
         this.writeOnHole = new Thread(new Runnable() {
             @Override
             public void run() {
                 int j = 0;
                 String msg;
                 //create Loop to send udp packets
-                while (runningHole) {
-                    try {
-                        msg = "I AM CLIENT A " + j;
+                while(runningHole){
+                    try{
+                        msg = "I AM CLIENT B " + j;
                         outPunch.write(msg.getBytes());
                         outPunch.write('\n');
                         outPunch.flush();
                         j++;
                         Thread.sleep(2000);
-                    } catch (IOException e) {
+                    }catch(IOException e){
                         System.err.println("IOException");
-                    } catch (Exception e) {
+                    }catch(Exception e){
                         System.err.println("SleepException");
                     }
                 }
@@ -177,8 +185,8 @@ public class ClientA {
         this.writeOnHole.start();
     }
 
-    private void proceedHolePunching(InetAddress addrToConnect, int portToConnect, int localPort) throws IOException {
-        if (this.socketClientPunch != null) {
+    private void proceedHolePunching(InetAddress addrToConnect, int portToConnect, int localPort) throws IOException{
+        if(this.socketClientPunch != null){
             outPunch = null;
             inPunch = null;
             String addr = addrToConnect.getHostAddress().trim();
@@ -187,7 +195,7 @@ public class ClientA {
             listenConnectionHole(localPort);
 
             System.out.println("Attempt to connect to : " + addr + ":" + portToConnect);
-            try {
+            try{
                 //Close this socket actually connected to the mediator
                 socketClientPunch.setReuseAddress(true);
                 socketClientPunch.close();
@@ -207,22 +215,24 @@ public class ClientA {
                 outPunch = new BufferedOutputStream(socketClientPunch.getOutputStream());
 
 
-            } catch (ConnectException ce) {
+            }catch (ConnectException ce){
                 System.out.println("Punch: Connection refused");
             }
 
-            if (outPunch != null && inPunch != null) {
+            if(outPunch != null && inPunch != null){
                 System.out.println("Punch: Connected to : " + addr + ":" + portToConnect);
+                redirectPorts(localPort, 8080);
+
                 listenDataOnHole(addr, portToConnect);
                 writeDataOnHole();
-            } else {
+            }else{
                 System.err.println("Error when attempting to connect");
             }
         }
     }
 
     //Entry point
-    public static void main(String[] args) throws IOException {
+    public static void main(String[] args) throws IOException{
 
         if (args.length > 0) {//Give args
             try {
@@ -234,12 +244,12 @@ public class ClientA {
                 mediatorTcpPunchPort = Integer.parseInt(args[2].trim());
             } catch (Exception ex) {
                 System.err.println("Error in input");
-                System.out.println("USAGE: java ClientA mediatorIP mediatorTcpDiscussionPort mediatorTcpPunchPort");
-                System.out.println("Example: java ClientA 127.0.0.1 9000 9001");
+                System.out.println("USAGE: java ClientB mediatorIP mediatorTcpDiscussionPort mediatorTcpPunchPort");
+                System.out.println("Example: java ClientB 127.0.0.1 9000 9001");
                 System.exit(0);
             }
         } else {//Give no args
-            System.out.println("ClientA running with default ports 9000 and 9001");
+            System.out.println("ClientB running with default ports 9000 and 9001");
 
             //by default use localhost
             mediatorIP = InetAddress.getByName("127.0.0.1");
@@ -249,6 +259,6 @@ public class ClientA {
             mediatorTcpPunchPort = 9001;
 
         }
-        new ClientA(mediatorIP, mediatorTcpDiscussionPort, mediatorTcpPunchPort);
+        new ClientB(mediatorIP, mediatorTcpDiscussionPort, mediatorTcpPunchPort);
     }
 }

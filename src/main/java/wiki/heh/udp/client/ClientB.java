@@ -79,7 +79,7 @@ public class ClientB {
                 }
             }
         } else if (message.getCommand().equals(Message.CMD_P2P_CONNECT)) {
-            message.setData("收到ClientA数据["+message.getData()+"]->"+message.getData().concat("*"));
+            message.setData("【ClientB】收到ClientA数据回复最后加“*”->"+message.getData().concat("*"));
             byte[] data = JsonUtil.toJson(message).getBytes();
             DatagramPacket dataPack = new DatagramPacket(data, data.length, packet.getAddress(), packet.getPort());
             Thread.sleep(5000);
