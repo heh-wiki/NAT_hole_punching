@@ -4,6 +4,7 @@ package wiki.heh.tcp.server;
  * @author heh
  * @date 2021/12/28
  */
+
 import java.io.BufferedOutputStream;
 import java.io.BufferedReader;
 import java.io.IOException;
@@ -79,11 +80,11 @@ public class Server {
         runPunchServer();
     }
 
-    private void runDiscussionServer(){
+    private void runDiscussionServer() {
         new Thread(new Runnable() {
             @Override
             public void run() {
-                try{
+                try {
                     socketConnect = new ServerSocket(tcpDiscussionPort);
 
                     System.out.println("Waiting for Client A");
@@ -105,25 +106,25 @@ public class Server {
                     //Create input and output streams to read/write messages for CLIENT B
                     inConnectB = new BufferedReader(new InputStreamReader(clientBConnect.getInputStream()));
                     outConnectB = new BufferedOutputStream(clientBConnect.getOutputStream());
-                }catch (IOException ioe){
+                } catch (IOException ioe) {
                     ioe.printStackTrace();
                 }
             }
         }).start();
     }
 
-    private void runPunchServer(){
+    private void runPunchServer() {
         new Thread(new Runnable() {
             @Override
             public void run() {
-                try{
+                try {
                     socketPunch = new ServerSocket(tcpPunchPort);
 
                     System.out.println("Waiting for Client A punch");
 
                     //Accept first client connection
                     clientAPunch = socketPunch.accept();
-                    clientAIp = ((InetSocketAddress)clientAPunch.getRemoteSocketAddress()).getAddress().getHostAddress().trim();
+                    clientAIp = ((InetSocketAddress) clientAPunch.getRemoteSocketAddress()).getAddress().getHostAddress().trim();
                     clientAPortLocal = String.valueOf(clientAPunch.getPort());
                     clientAPort = String.valueOf(clientAPunch.getLocalPort());
 
@@ -137,7 +138,7 @@ public class Server {
                     System.out.println("Waiting for Client B punch");
                     //Accept second client connection
                     clientBPunch = socketPunch.accept();
-                    clientBIp = ((InetSocketAddress)clientBPunch.getRemoteSocketAddress()).getAddress().getHostAddress().trim();
+                    clientBIp = ((InetSocketAddress) clientBPunch.getRemoteSocketAddress()).getAddress().getHostAddress().trim();
                     clientBPortLocal = String.valueOf(clientBPunch.getPort());
                     clientBPort = String.valueOf(clientBPunch.getLocalPort());
 
@@ -150,14 +151,14 @@ public class Server {
 
                     //Once the two clients have punched
                     proceedInfosExchange();
-                }catch (IOException ioe){
+                } catch (IOException ioe) {
                     ioe.printStackTrace();
                 }
             }
         }).start();
     }
 
-    private void proceedInfosExchange() throws IOException{
+    private void proceedInfosExchange() throws IOException {
         /**
          *
          * *** FIRST CLIENT'S PUBLIC IP AND PORTS ****
@@ -170,11 +171,11 @@ public class Server {
             }
         }
 
-        System.out.println("******CLIENT A IP AND PORT DETECTED " + clientAIp + ":" +  clientAPortLocal + "->" + clientAPort + " *****");
+        System.out.println("******CLIENT A IP AND PORT DETECTED " + clientAIp + ":" + clientAPortLocal + "->" + clientAPort + " *****");
 
         /**
          *
-         * *** SECOND CLIENT'S PUBLIC IP AND PORTS ****
+         * *** 第二客户端的公共 IP 和端口 ****
          */
         while (!readClientB) {
             String message = inPunchB.readLine();   //Get Data from tcp packet into a string
@@ -183,14 +184,14 @@ public class Server {
                 System.out.println("Initial punch message from CLIENT B: " + message);
             }
         }
-        System.out.println("******CLIENT B IP AND PORT DETECTED " + clientBIp + ":" +  clientBPortLocal + "->" + clientBPort + " *****");
+        System.out.println("******CLIENT B IP AND PORT DETECTED " + clientBIp + ":" + clientBPortLocal + "->" + clientBPort + " *****");
 
         /*
          !!!!!!!!!!!CRITICAL PART!!!!!!!!
-         The core of hole punching depends on this part.
+         TCP打洞核心代码.
          */
 
-        System.out.println("***** Exchanging public IP and port between the clients *****");
+        System.out.println("***** 客户端交换IP准备打洞 *****");
         while (true) {
             String string = clientAIp + "~~" + clientAPort + "~~" + clientAPortLocal + "~~" + clientBIp + "~~" + clientBPort + "~~" + clientBPortLocal;
             outConnectA.write(string.getBytes());      //SENDING CLIENT B's public IP & PORT TO CLIENT A

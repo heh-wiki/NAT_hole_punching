@@ -120,7 +120,7 @@ public class ClientB {
             @Override
             public void run() {
                 try{
-                    System.out.println("Listen hole on port: " + localPort);
+                    System.out.println("监听打洞端口: " + localPort);
                     socketServerPunch = new ServerSocket(localPort);
                     socketClientPunch = socketServerPunch.accept();
                     inPunch = new BufferedReader(new InputStreamReader(socketClientPunch.getInputStream()));
@@ -191,10 +191,10 @@ public class ClientB {
             inPunch = null;
             String addr = addrToConnect.getHostAddress().trim();
 
-            System.out.println("Start listen on port : " + localPort);
+            System.out.println("开始监听端口 : " + localPort);
             listenConnectionHole(localPort);
 
-            System.out.println("Attempt to connect to : " + addr + ":" + portToConnect);
+            System.out.println("尝试链接到 : " + addr + ":" + portToConnect);
             try{
                 //Close this socket actually connected to the mediator
                 socketClientPunch.setReuseAddress(true);
@@ -204,7 +204,7 @@ public class ClientB {
                 socketClientPunch = new Socket();
                 socketClientPunch.setReuseAddress(true);
 
-                //Bind it to the same addr
+                //绑定到同一个地址
                 socketClientPunch.bind(new InetSocketAddress(localPort));
 
                 //Connect to the distant client

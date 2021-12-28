@@ -64,7 +64,7 @@ public class ClientA {
 
         System.out.println("sending initial tcp punch message");
 
-        //Send message, the server get all information about the message send (local port, distant port and ip)
+        //发送消息，服务器获取消息发送的所有信息（本地端口、远程端口和ip）
         byte[] sendData = "one".getBytes();
         outPunch.write(sendData);
         outPunch.write('\n');
@@ -75,10 +75,10 @@ public class ClientA {
         this.readOnHole = new Thread(new Runnable() {
             @Override
             public void run() {
-                //create a loop to read the TCP response from the server
+                //创建一个循环来读取来自服务器的 TCP 响应
                 while (!respRead) {
                     try {
-                        //Wait for message
+                        //等待消息
                         message = inDiscussion.readLine();
 
                         tokens = message.split("~~");  //split response into tokens for IP and Port
@@ -102,7 +102,7 @@ public class ClientA {
                         outDiscussion.write('\n');
                         outDiscussion.flush();
 
-                        //Received all infos needed -> proceed hole punching
+                        //收到所有需要的信息 -> 继续打孔
                         proceedHolePunching(InetAddress.getByName(tokens[3].trim()), Integer.parseInt(tokens[1].trim()), Integer.valueOf(tokens[2]));
                     } catch (IOException ioe) {
                         ioe.printStackTrace();
@@ -119,7 +119,7 @@ public class ClientA {
             @Override
             public void run() {
                 try {
-                    System.out.println("Listen hole on port: " + localPort);
+                    System.out.println("监听打洞端口: " + localPort);
                     socketServerPunch = new ServerSocket(localPort);
                     socketClientPunch = socketServerPunch.accept();
                     inPunch = new BufferedReader(new InputStreamReader(socketClientPunch.getInputStream()));
@@ -183,10 +183,10 @@ public class ClientA {
             inPunch = null;
             String addr = addrToConnect.getHostAddress().trim();
 
-            System.out.println("Start listen on port : " + localPort);
+            System.out.println("开始监听端口 : " + localPort);
             listenConnectionHole(localPort);
 
-            System.out.println("Attempt to connect to : " + addr + ":" + portToConnect);
+            System.out.println("尝试链接到 : " + addr + ":" + portToConnect);
             try {
                 //Close this socket actually connected to the mediator
                 socketClientPunch.setReuseAddress(true);
@@ -196,10 +196,10 @@ public class ClientA {
                 socketClientPunch = new Socket();
                 socketClientPunch.setReuseAddress(true);
 
-                //Bind it to the same addr
+                //绑定到同一个地址
                 socketClientPunch.bind(new InetSocketAddress(localPort));
 
-                //Connect to the distant client
+                //连接到远程客户端
                 socketClientPunch.connect(new InetSocketAddress(addrToConnect, portToConnect));
 
                 //Init in and out
